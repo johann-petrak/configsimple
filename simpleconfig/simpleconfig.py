@@ -1,5 +1,5 @@
 #
-import argparse
+import configargparse
 import re
 
 PAT_OPTION = re.compile(r'(--?)([^.\s]+)')
@@ -21,21 +21,29 @@ class SimpleConfig:
         else:
             return component + "." + option
 
-    def __init__(self, description=None, usage=None, component=None, config_file=None):
+    def __init__(self, description=None, usage=None, component=None, config_files=None):
         if component is None:
             raise Exception("SimpleConfig component must be specified as empty string or a name")
         self.component = component
-        self.argparser = argparse.ArgumentParser(
-            description=description, usage=usage, add_help=True, allow_abbrev=False, prefix_chars='-')
+        if config_files is None:
+            config_files = []
+        elif not isinstance(config_files, list):
+            config_files = [config_files]
+        self.argparser = configargparse.ArgumentParser(
+            default_config_files=config_files,
+            description=description,
+            usage=usage,
+            add_help=True,
+            allow_abbrev=False,
+            prefix_chars='-')
         # always add the standard options: component.help, component.config_file
-        self.argparser.add_argument("--"+SimpleConfig.fullname(self.component, "help"), action="store_true",
-                                    help="Show help for the '{}' component".format(self.component))
-        self.argparser.add_argument("--"+SimpleConfig.fullname(self.component, "config_file", type=str),
-                                    help="Specify a file from which to load settings for component '{}'".format(self.component))
+        self.argparser.add("--"+SimpleConfig.fullname(self.component, "help"), action="store_true",
+                           help="Show help for the '{}' component".format(self.component))
+        self.argparser.add("--"+SimpleConfig.fullname(self.component, "config_file", is_config_file=True),
+                           help="Specify a file from which to load settings for component '{}'".format(self.component))
         self.namespace = None
         self.defaults = {}   # dictionary dest->value
         self.added_configs = []
-        self.config_file = config_file
         self.parent = None  # this will be set if this config gets added to another config
 
     def add_config(self, config):
@@ -94,25 +102,20 @@ class SimpleConfig:
                 if "." not in nameshortened:
                     raise Exception("Option {} not defined for component {}".format(nameshortened, self.component))
         # now process any config file settings and environment settings
-        # we do this in decreasing order of priority:
-        # * config file specified on the command line for this component
-        # * config file specified when we initialised this component config
-        # * setting from the parent (from some config file) but not from the merged settings in the parent
-        # * default specified in the add_argument call
-        if ns.config_file is not None:
-            # TODO: set from there what is not set through command line!
-            pass
-        if self.config_file is not None:
-            # TODO: set from there what is still not set
-            pass
+        # configargparse alreadt handles local files and environment vars, we handle inheritance
+        # and falling back to the specified default here
         if self.parent is not None:
             # TODO: set from parent settings what is still not set
             pass
         # set what is still not set from the local defaults
-        for k, v in self.defaults:
+        for k, v in self.defaults.items():
             if getattr(ns, k) is None:
                 setattr(ns, k, v)
         self.namespace = ns
+        # now that we have all the settings, merge them into the global settings in
+        # the parent (which will bubble up to its parent and so on)
+        if self.parent is not None:
+            self.parent.merge_namespace(self.namespace)
 
     def get(self, parm, default=None, exception_if_missing=False):
         name = SimpleConfig.fullname(self.component, parm)
@@ -126,3 +129,16 @@ class SimpleConfig:
         self.namespace.setattr(name, value)
         if self.parent is not None:
             self.parent.set(name, value)
+
+    def merge_namespace(self, ns):
+        """
+        Merge the given namespace into our own namespace.
+        :param ns: namespace to merge into our own
+        :return:
+        """
+        for k, v in ns.__dict__.items():
+            if hasattr(self.namespace, k):
+                raise Exception(
+                    "Component {} namespace already has {}".format(self.component, k))
+            setattr(self.namespace, k, v)
+
