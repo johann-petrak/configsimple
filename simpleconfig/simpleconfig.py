@@ -5,7 +5,7 @@ import sys
 from loguru import logger
 
 logger.remove()
-logger.add(sys.stderr, level="INFO")
+logger.add(sys.stderr, level="DEBUG")
 
 PAT_OPTION = re.compile(r'(--?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
 
@@ -105,6 +105,8 @@ class SimpleConfig:
                            metavar="CONFIG_OUTPUT_PATH",
                            is_write_out_config_file_arg=True,
                            help="Specify a file to which to save specified settings.")
+        logger.debug("Created argparser for {}: {}".format(self.component, self.argparser))
+        logger.debug("Allow abbrev is {}".format(self.argparser.allow_abbrev))
         self.namespace = None
         self.defaults = {}   # dictionary dest->value
         self.added_configs = []
@@ -175,6 +177,7 @@ class SimpleConfig:
         """
         if self.component != "" and self.parent is None:
             raise Exception("Can only use parse_args for a component config after adding to top config")
+        logger.debug("Trying to parse")
         self.namespace, unknown = self.argparser.parse_known_args(args)
         logger.debug("After parse_args in '{}', unknown: {}".format(self.component, unknown))
         logger.debug("Namespace for {} after parse: {}".format(self.component, vars(self.namespace)))

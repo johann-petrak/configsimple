@@ -1,14 +1,7 @@
-import pytest
 import sys
 import simpleconfig
-from loguru import logger
-
-logger.remove()
-logger.add(sys.stderr, level="INFO")
 
 class TestSimpleConfig1C1():
-    #def setUp(self):
-    #    pass
 
     def test_basics1(self):
         theargs = ["--opt1", "val1", '--comp1.opt2', 'val2']
@@ -34,7 +27,6 @@ class TestSimpleConfig1C1():
         topconfig.add_config(comp1config)
         comp1config.add_argument("--bar")
         comp1config.parse_args(theargs)
-        # logger.debug('ns={}'.format(topconfig.namespace))
 
     def test_basics2(self):
         cfgile1 = './tests/cfgfile1.yaml'
@@ -42,5 +34,4 @@ class TestSimpleConfig1C1():
         topconfig = simpleconfig.SimpleConfig()
         topconfig.add_argument("--key1", default="defaultforkey1")
         topconfig.parse_args(theargs)
-        logger.debug('ns={}'.format(topconfig.namespace))
 
