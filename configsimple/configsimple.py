@@ -1,19 +1,19 @@
-from simpleconfig import configargparse
+from configsimple import configargparse
 import re
 import sys
 from loguru import logger
 
 logger.remove()
-logger.add(sys.stderr, level="DEBUG")
+logger.add(sys.stderr, level="INFO")
 
 PAT_OPTION = re.compile(r'(--?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
 
 
-class SimpleConfig:
+class ConfigSimple:
     """
     This class replaces ArgumentParser and the result of parse_args.
     It can declare and parse settings for the "top level" much like ArgumentParser does
-    plus a SimpleConfig(component="somecomponent") can declare settings for a component
+    plus a ConfigSimple(component="somecomponent") can declare settings for a component
     with the given name which are then available as "somecomponent.settingname".
     Settings are accessed through the get(settingname) of this class.
     Component settings need to get added to a top setting instance.
@@ -94,13 +94,13 @@ class SimpleConfig:
             allow_abbrev=False,
             prefix_chars='-')
         # always add the standard options: component.help, component.config_file
-        self.argparser.add(SimpleConfig.fullname(self.component, "--help"), action="store_true",
+        self.argparser.add(ConfigSimple.fullname(self.component, "--help"), action="store_true",
                            help="Show help for the '{}' component".format(self.component))
-        self.argparser.add(SimpleConfig.fullname(self.component, "--config_file"),
+        self.argparser.add(ConfigSimple.fullname(self.component, "--config_file"),
                            is_config_file_arg=True,
                            help="Specify a file from which to load settings for component '{}'".
                            format(self.component))
-        self.argparser.add(SimpleConfig.fullname(self.component, "--save_config_file"),
+        self.argparser.add(ConfigSimple.fullname(self.component, "--save_config_file"),
                            metavar="CONFIG_OUTPUT_PATH",
                            is_write_out_config_file_arg=True,
                            help="Specify a file to which to save specified settings.")
@@ -113,7 +113,7 @@ class SimpleConfig:
 
     def add_config(self, config):
         """
-        Add the given SimpleConfig for a component to this instance. The current config must
+        Add the given ConfigSimple for a component to this instance. The current config must
         be a "top" component and the one added must be a component config.
         :param config: the other  config to add
         :return:
@@ -144,7 +144,7 @@ class SimpleConfig:
             if m is None:
                 raise Exception("Not a valid option string: {}".format(option_string))
             prefixchars, optionname = m.groups()
-            options_new.append(prefixchars + SimpleConfig.fullname(self.component, optionname))
+            options_new.append(prefixchars + ConfigSimple.fullname(self.component, optionname))
         # intercept the dest keyword
         kwargs.setdefault('dest', None)
         dest = kwargs.pop("dest")
@@ -153,14 +153,14 @@ class SimpleConfig:
         if dest is not None:
             if "." in dest:
                 raise Exception("dest must not contain a dot")
-            dest = SimpleConfig.fullname(self.component, dest)
+            dest = ConfigSimple.fullname(self.component, dest)
             kwargs["dest"] = dest
         # intercept the default value, we do not allow argparse to handle this
         kwargs.setdefault("default", None)
         default = kwargs.pop("default")
         self.defaults[dest] = default
         if self.component != "" and self.env_var_prefix is not None:
-            envname = SimpleConfig.envname_from(
+            envname = ConfigSimple.envname_from(
                 self.env_var_prefix, self.component, optionname)
             kwargs.setdefault("env_var", envname)
             logger.debug("Set env_var for {}/{} to {}".format(self.component, optionname, envname))
@@ -236,7 +236,7 @@ class SimpleConfig:
         """
         if self.namespace is None:
             raise Exception("Can only use get after parse_args has been called")
-        name = SimpleConfig.fullname(self.component, option)
+        name = ConfigSimple.fullname(self.component, option)
         d = vars(self.namespace)
         if exception_if_missing and name not in d:
             raise Exception("Setting {} not found for component '{}'".format(option, self.component))
@@ -245,7 +245,7 @@ class SimpleConfig:
     def set(self, parm, value):
         if self.namespace is None:
             raise Exception("Can only use set after parse_args has been called")
-        name = SimpleConfig.fullname(self.component, parm)
+        name = ConfigSimple.fullname(self.component, parm)
         self.namespace.setattr(name, value)
         if self.parent is not None:
             self.parent.set(name, value)

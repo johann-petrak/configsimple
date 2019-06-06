@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-"""Packaging script for the simpleconfig library."""
+"""Packaging script for the configsimple library."""
 
 import os
 from setuptools import setup, find_packages
@@ -11,7 +11,7 @@ with open(os.path.join(here, 'README.md')) as f:
     readme = f.read()
 
 setup(
-    name="simpleconfig",
+    name="configsimple",
     version="0.1",
     author="Johann Petrak",
     author_email="johann.petrak@gmail.com",
@@ -25,11 +25,12 @@ setup(
     platforms='any',
     license="MIT",
     keywords="",
-    url="http://github.com/johann-petrak/simpleconfig",
+    url="http://github.com/johann-petrak/configsimple",
     packages=find_packages(),
     test_suite='tests',
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        # "Development Status :: 5 - Production/Stable",
+        # "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
