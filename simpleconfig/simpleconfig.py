@@ -1,5 +1,4 @@
-#
-import configargparse
+from simpleconfig import configargparse
 import re
 import sys
 from loguru import logger
@@ -83,7 +82,7 @@ class SimpleConfig:
             use_env_var_prefix = None
         else:
             use_env_var_prefix = env_var_prefix
-        self.argparser = configargparse.ArgumentParser(
+        self.argparser = configargparse.ArgParser(
             add_config_file_help=False,
             add_env_var_help=False,
             auto_env_var_prefix=use_env_var_prefix,
