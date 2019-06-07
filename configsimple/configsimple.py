@@ -316,3 +316,28 @@ class ConfigSimple:
             setattr(self.namespace, k, v)
         # logger.debug("NS IS NOW: {}".format(self.namespace))
 
+    # methods to make a config instance behave a lot like a dictionary:
+    # just use vars(namespace) and pass on the methods!
+    def keys(self):
+        return vars(self.namespace).keys()
+
+    def values(self):
+        return vars(self.namespace).values()
+
+    def items(self):
+        return vars(self.namespace).items()
+
+    def __getitem__(self, key):
+        return self.get(key, exception_if_missing=True)
+
+    def __setitem__(self, key, val):
+        self.set(key, val)
+
+    def __iter__(self):
+        return vars(self.namespace).__iter__()
+
+    def __str__(self):
+        return "ConfigSimple("+str(vars(self.namespace))+")"
+
+    def __repr__(self):
+        return str(self)

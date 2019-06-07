@@ -42,7 +42,9 @@ if __name__ == "__main__":
     print("Get the global comp1.foo: {}".format(topconfig.get("comp1.foo")))
     print("Get the global comp2.foo: {}".format(topconfig.get("comp2.foo")))
     print("Get the global comp1.bar: {}".format(topconfig.get("comp1.bar")))
-    print("Get the global comp1.sub1.sub2.foo: {}".format(topconfig.get("comp1.sub1.sub2.foo")))
+    print("Get the global comp1.sub1.sub2.foo: {}".format(topconfig["comp1.sub1.sub2.foo"]))
     print("Top positional parameter pos1: {}".format(topconfig.get("pos1")))
-
-
+    print("All config keys: {}".format(topconfig.keys()))
+    print("All config items: {}".format(topconfig.items()))
+    print("The top config as string:", topconfig)
+    print("The top config repr:", repr(topconfig))
