@@ -12,7 +12,7 @@ with open(os.path.join(here, 'README.md')) as f:
 
 setup(
     name="configsimple",
-    version="0.1",
+    version="0.2",
     author="Johann Petrak",
     author_email="johann.petrak@gmail.com",
     description='Configure components/classes using config files, command line options etc in a simple way',
