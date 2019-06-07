@@ -113,7 +113,28 @@ class ConfigSimple:
         self.namespace = None
         self.defaults = {}   # dictionary dest->value
         self.added_configs = []
+        self.known_options = set()
         self.parent = None  # this will be set if this config gets added to another config
+
+    def get_config(self, description=None,
+                 usage=None,
+                 component=None,
+                 config_files=None,
+                 env_var_prefix="SIMPLECONFIG_"):
+        if self.component != "":
+            raise Exception("Cannot get a component config from a config that is not a top config but component {} config".format(self.component))
+        if component is None or component == "":
+            raise Exception("Can only get a component config, not a top config")
+        for cfg in self.added_configs:
+            if cfg.component == component:
+                return cfg
+        tmpconfig = ConfigSimple(description=description,
+                 usage=usage,
+                 component=component,
+                 config_files=config_files,
+                 env_var_prefix=env_var_prefix)
+        self.add_config(tmpconfig)
+        return tmpconfig
 
     def add_config(self, config):
         """
@@ -131,7 +152,9 @@ class ConfigSimple:
         # adding the same config twice is a NOOP
         for cfg in self.added_configs:
             if cfg.component == config.component:
+                logger.debug("Component {} already added".format(config.component))
                 return
+        logger.debug("Adding component {}".format(config.component))
         self.added_configs.append(config)
         config.parent = self
         if config.namespace is not None:
@@ -139,7 +162,13 @@ class ConfigSimple:
 
     def add_argument(self, *args, **kwargs):
         # intercept all the args and use componentame.optionname instead
+        # NOTE: unlike with argparser, this will ignore any attempt to add the same
+        # parameter twice! argparse will happily add several positional arguments with the same
+        # name but we only do it the first time, argparse will complain when adding an option twice but
+        # we only do it the first time.
         options_new = []
+        if not args:
+            raise Exception("Need at least one argument!")
         for option_string in args:
             if self.component == "":
                 m = PAT_OPTION_TOP.match(option_string)
@@ -148,16 +177,19 @@ class ConfigSimple:
             if m is None:
                 raise Exception("Not a valid option string: {}".format(option_string))
             prefixchars, optionname = m.groups()
-            options_new.append(prefixchars + ConfigSimple.fullname(self.component, optionname))
+            option_new = prefixchars + ConfigSimple.fullname(self.component, optionname)
+            if option_new in self.known_options:
+                return
+            self.known_options.add(option_new)
+            options_new.append(option_new)
         # intercept the dest keyword
+
         kwargs.setdefault('dest', None)
         dest = kwargs.pop("dest")
         # only set the destination if this is not a positional argument
         if dest is None and options_new[0].startswith("-"):
             dest = optionname
         if dest is not None:
-            if "." in dest:
-                raise Exception("dest must not contain a dot")
             dest = ConfigSimple.fullname(self.component, dest)
             kwargs["dest"] = dest
         # intercept the default value, we do not allow argparse to handle this
@@ -188,7 +220,7 @@ class ConfigSimple:
         :return: None
         """
         if self.component != "" and self.parent is None:
-            raise Exception("Can only use parse_args for a component config after adding to top config")
+            raise Exception("Can only use parse_args for a component config ({}) after adding to top config".format(self.component))
         logger.debug("Trying to parse")
         # even before actually parsing, if we have a top config we check if there is a --help or -h
         # argument and process the help manually so we can include the help info for any added

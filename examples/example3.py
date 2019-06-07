@@ -1,20 +1,19 @@
-from configsimple import topconfig, ConfigSimple, flag
+from configsimple import topconfig, flag
 
 
 class Component1:
     @staticmethod
     def configsimple(config=None, component="comp1"):
         myconf = config or topconfig.get_config(component=component)
-        myconf.add_argument("--foo", default="22", type=int, help="The FOO setting!")
-        myconf.add_argument("--bar", type=flag)
+        myconf.add_argument("--sub1.sub2.foo", default="22", type=int, help="The FOO setting!")
+        myconf.add_argument("--sub1.sub3.sub4.bar", type=flag)
         return myconf
 
     def __init__(self):
         cfg = Component1.configsimple()
         topconfig.add_config(cfg)
         cfg.parse_args()
-        print("Component1 foo is {}".format(cfg.get("foo")))
-
+        print("Component1 sub1.sub2.foo is {}".format(cfg.get("sub1.sub2.foo")))
 
 class Component2:
     def configsimple(config=None, component="comp2"):
@@ -43,6 +42,7 @@ if __name__ == "__main__":
     print("Get the global comp1.foo: {}".format(topconfig.get("comp1.foo")))
     print("Get the global comp2.foo: {}".format(topconfig.get("comp2.foo")))
     print("Get the global comp1.bar: {}".format(topconfig.get("comp1.bar")))
+    print("Get the global comp1.sub1.sub2.foo: {}".format(topconfig.get("comp1.sub1.sub2.foo")))
     print("Top positional parameter pos1: {}".format(topconfig.get("pos1")))
 
 
