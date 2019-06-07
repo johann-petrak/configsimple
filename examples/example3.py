@@ -48,3 +48,7 @@ if __name__ == "__main__":
     print("All config items: {}".format(topconfig.items()))
     print("The top config as string:", topconfig)
     print("The top config repr:", repr(topconfig))
+    # set a config value that should percolate down to a component setting
+    topconfig["comp1.sub1.sub2.foo"] = 123456
+    print("Top config now:", topconfig)
+    print("Comp1 config now:", topconfig.get_config(component="comp1"))
