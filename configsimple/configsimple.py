@@ -7,6 +7,7 @@ logger.remove()
 logger.add(sys.stderr, level="INFO")
 
 PAT_OPTION = re.compile(r'(--?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
+PAT_OPTION_TOP = re.compile(r'(-?-?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
 
 
 class ConfigSimple:
@@ -80,9 +81,12 @@ class ConfigSimple:
         self.env_var_prefix = env_var_prefix
         if component == "":
             use_env_var_prefix = None
+            prog = None
         else:
             use_env_var_prefix = env_var_prefix
+            prog = component
         self.argparser = configargparse.ArgParser(
+            prog = prog,
             add_config_file_help=False,
             add_env_var_help=False,
             auto_env_var_prefix=use_env_var_prefix,
@@ -115,6 +119,7 @@ class ConfigSimple:
         """
         Add the given ConfigSimple for a component to this instance. The current config must
         be a "top" component and the one added must be a component config.
+        If the config is already added, the call does nothing.
         :param config: the other  config to add
         :return:
         """
@@ -123,10 +128,6 @@ class ConfigSimple:
             raise Exception("Can only add to a top config but adding to {}".format(self.component))
         if config.component == "":
             raise Exception("Can only add a component config, not a top config")
-        # check that the config to be added has not already been added to another config
-        if config.parent is not None and config.parent != self:
-            raise Exception("Cannot add component {} config, already added to another top config"
-                            .formt(config.component))
         # adding the same config twice is a NOOP
         for cfg in self.added_configs:
             if cfg.component == config.component:
@@ -140,7 +141,10 @@ class ConfigSimple:
         # intercept all the args and use componentame.optionname instead
         options_new = []
         for option_string in args:
-            m = PAT_OPTION.match(option_string)
+            if self.component == "":
+                m = PAT_OPTION_TOP.match(option_string)
+            else:
+                m = PAT_OPTION.match(option_string)
             if m is None:
                 raise Exception("Not a valid option string: {}".format(option_string))
             prefixchars, optionname = m.groups()
@@ -148,7 +152,8 @@ class ConfigSimple:
         # intercept the dest keyword
         kwargs.setdefault('dest', None)
         dest = kwargs.pop("dest")
-        if dest is None:
+        # only set the destination if this is not a positional argument
+        if dest is None and options_new[0].startswith("-"):
             dest = optionname
         if dest is not None:
             if "." in dest:
@@ -158,7 +163,8 @@ class ConfigSimple:
         # intercept the default value, we do not allow argparse to handle this
         kwargs.setdefault("default", None)
         default = kwargs.pop("default")
-        self.defaults[dest] = default
+        if dest is not None:
+            self.defaults[dest] = default
         if self.component != "" and self.env_var_prefix is not None:
             envname = ConfigSimple.envname_from(
                 self.env_var_prefix, self.component, optionname)
@@ -166,6 +172,13 @@ class ConfigSimple:
             logger.debug("Set env_var for {}/{} to {}".format(self.component, optionname, envname))
         # logger.debug("Defaults for {} are now {}".format(self.component, self.defaults))
         self.argparser.add_argument(*options_new, **kwargs)
+
+    def show_help(self):
+        help = self.argparser.format_help()
+        print(help, sys.stderr)
+        for cfg in self.added_configs:
+            help = cfg.argparser.format_help()
+            print(help, sys.stderr)
 
     def parse_args(self, args=None):
         """
@@ -177,17 +190,26 @@ class ConfigSimple:
         if self.component != "" and self.parent is None:
             raise Exception("Can only use parse_args for a component config after adding to top config")
         logger.debug("Trying to parse")
+        # even before actually parsing, if we have a top config we check if there is a --help or -h
+        # argument and process the help manually so we can include the help info for any added
+        # component configs
+        argstouse = args or sys.argv[1:]
+        if self.component == "" and ("-h" in argstouse or "--help" in argstouse):
+            self.show_help()
+            sys.exit()
         self.namespace, unknown = self.argparser.parse_known_args(args)
         logger.debug("After parse_args in '{}', unknown: {}".format(self.component, unknown))
         logger.debug("Namespace for {} after parse: {}".format(self.component, vars(self.namespace)))
         # first of all, check if we have a help request:
         if self.get("help"):
-            help = self.argparser.format_help()
-            print(help, sys.stderr)
+            self.show_help()
             sys.exit()
         for val in unknown:
             if val.startswith("-"):
-                m = PAT_OPTION.match(val)
+                if self.component == "":
+                    m = PAT_OPTION_TOP.match(val)
+                else:
+                    m = PAT_OPTION.match(val)
                 if m is None:
                     raise Exception("Odd unknown setting name for component {}: {}".format(self.component, val))
                 prefixchars, optionname = m.groups()

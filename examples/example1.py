@@ -24,6 +24,7 @@ if __name__ == "__main__":
     config.add_argument("--bar", help="The BAR setting")
     config.add_argument("--foo", help="The toplevel FOO setting")
     config.add_argument("--comp", type=int, choices=[1, 2], required=True,  help="Component number")
+    config.add_argument("pos1")
     config.parse_args()
     print("Toplevel foo is {}".format(config.get("foo")))
     compclass = [Component1, Component2][config.get("comp")-1]
@@ -31,5 +32,6 @@ if __name__ == "__main__":
     print("Get the global comp1.foo: {}".format(config.get("comp1.foo")))
     print("Get the global comp2.foo: {}".format(config.get("comp2.foo")))
     print("Get the global comp1.bar: {}".format(config.get("comp1.bar")))
+    print("Top positional parameter pos1: {}".format(config.get("pos1")))
 
 

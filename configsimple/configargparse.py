@@ -457,7 +457,6 @@ class ArgumentParser(argparse.ArgumentParser):
                 [(a.env_var, (a, env_vars[a.env_var]))
                     for a in actions_with_env_var_values])
 
-
         # before parsing any config files, check if -h was specified.
         supports_help_arg = any(
             a for a in self._actions if isinstance(a, argparse._HelpAction))
@@ -510,7 +509,6 @@ class ArgumentParser(argparse.ArgumentParser):
                     self._source_to_settings[source_key][key] = (action, value)
 
             args = args + config_args
-
 
         # save default settings for use by print_values()
         default_settings = OrderedDict()

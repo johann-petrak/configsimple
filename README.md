@@ -47,6 +47,7 @@ if __name__ == "__main__":
     config.add_argument("--bar", help="The BAR setting")
     config.add_argument("--foo", help="The toplevel FOO setting")
     config.add_argument("--comp", type=int, choices=[1, 2], required=True,  help="Component number")
+    config.add_argument("pos1")  # only the top config may have positional arguments
     config.parse_args()
     print("Toplevel foo is {}".format(config.get("foo")))
     compclass = [Component1, Component2][config.get("comp")-1]
@@ -54,10 +55,47 @@ if __name__ == "__main__":
     print("Get the global comp1.foo: {}".format(config.get("comp1.foo")))
     print("Get the global comp2.foo: {}".format(config.get("comp2.foo")))
     print("Get the global comp1.bar: {}".format(config.get("comp1.bar")))
+    print("Top positional parameter pos1: {}".format(config.get("pos1")))
 ```
 
+One way to run this:
+```
+$ python examples/example1.py --comp 1 1 --comp1.foo 2
+Toplevel foo is None
+Component1 foo is 2
+Get the global comp1.foo: 2
+Get the global comp2.foo: None
+Get the global comp1.bar: None
+Top positional parameter pos1: 1
+```
 
+This selects component comp1 to get initialised which in turn will
+set the comp1.foo parameter. Note that the positional parameter
+"pos1" MUST be specified before any component arguments!
 
+In order to get usage information for the component comp1 settings,
+we cann run:
+```
+$ python examples/example1.py --comp 1 x --comp1.help
+Toplevel foo is None
+usage: example1.py [--comp1.help] [--comp1.config_file COMP1.CONFIG_FILE]
+                   [--comp1.save_config_file CONFIG_OUTPUT_PATH]
+                   [--comp1.foo COMP1.FOO] [--comp1.bar COMP1.BAR]
+
+optional arguments:
+  --comp1.help          Show help for the 'comp1' component
+  --comp1.config_file COMP1.CONFIG_FILE
+                        Specify a file from which to load settings for
+                        component 'comp1'
+  --comp1.save_config_file CONFIG_OUTPUT_PATH
+                        Specify a file to which to save specified settings.
+  --comp1.foo COMP1.FOO
+                        The FOO setting!
+  --comp1.bar COMP1.BAR
+```
+This shows the help information as soon as the parameters are getting
+parsed in component comp1. For this to work, the required
+top level arguments have to be provided. 
 
 ## NOTE
 

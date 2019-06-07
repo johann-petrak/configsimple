@@ -10,4 +10,4 @@ def flag(val):
     else:
         raise argparse.ArgumentTypeError("Boolean value expected, not %s" % (val,))
 
-config = ConfigSimple(component='')
+topconfig = ConfigSimple(component='')

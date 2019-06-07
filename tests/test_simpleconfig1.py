@@ -5,6 +5,7 @@ import configsimple
 def msg(*args):
     print(*args, file=sys.stderr)
 
+
 class TestConfigSimple1C1():
 
     def test_basics1(self, capfd):
