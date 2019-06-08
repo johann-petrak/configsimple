@@ -15,6 +15,7 @@ class Component1:
         cfg.parse_args()
         print("Component1 sub1.sub2.foo is {}".format(cfg.get("sub1.sub2.foo")))
 
+
 class Component2:
     def configsimple(config=None, component="comp2"):
         myconf = config or topconfig.get_config(component=component)

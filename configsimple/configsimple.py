@@ -9,6 +9,8 @@ logger.add(sys.stderr, level="INFO")
 PAT_OPTION = re.compile(r'(--?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
 PAT_OPTION_TOP = re.compile(r'(-?-?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
 
+def argskws2dicts(*args, **kwargs):
+    return args, kwargs
 
 class ConfigSimple:
     """
@@ -85,7 +87,7 @@ class ConfigSimple:
         else:
             use_env_var_prefix = env_var_prefix
             prog = component
-        self.argparser = configargparse.ArgParser(
+        _, self.argparser_inits = argskws2dicts(
             prog = prog,
             add_config_file_help=False,
             add_env_var_help=False,
@@ -97,17 +99,27 @@ class ConfigSimple:
             add_help=False,
             allow_abbrev=False,
             prefix_chars='-')
+        self.argparser_adds = []
+        self.argparser = configargparse.ArgParser(**self.argparser_inits)
         # always add the standard options: component.help, component.config_file
-        self.argparser.add(ConfigSimple.fullname(self.component, "--help"), action="store_true",
+        add = argskws2dicts(ConfigSimple.fullname(self.component, "--help"), action="store_true",
                            help="Show help for the '{}' component".format(self.component))
-        self.argparser.add(ConfigSimple.fullname(self.component, "--config_file"),
+        self.argparser_adds.append(add)
+        self.argparser.add(*add[0], **add[1])
+
+        add = argskws2dicts(ConfigSimple.fullname(self.component, "--config_file"),
                            is_config_file_arg=True,
                            help="Specify a file from which to load settings for component '{}'".
                            format(self.component))
-        self.argparser.add(ConfigSimple.fullname(self.component, "--save_config_file"),
+        self.argparser_adds.append(add)
+        self.argparser.add(*add[0], **add[1])
+
+        add = argskws2dicts(ConfigSimple.fullname(self.component, "--save_config_file"),
                            metavar="CONFIG_OUTPUT_PATH",
                            is_write_out_config_file_arg=True,
                            help="Specify a file to which to save specified settings.")
+        self.argparser_adds.append(add)
+        self.argparser.add(*add[0], **add[1])
         logger.debug("Created argparser for {}: {}".format(self.component, self.argparser))
         logger.debug("Allow abbrev is {}".format(self.argparser.allow_abbrev))
         self.namespace = None
@@ -203,14 +215,24 @@ class ConfigSimple:
             kwargs.setdefault("env_var", envname)
             logger.debug("Set env_var for {}/{} to {}".format(self.component, optionname, envname))
         # logger.debug("Defaults for {} are now {}".format(self.component, self.defaults))
+        self.argparser_adds.append((options_new, kwargs))
         self.argparser.add_argument(*options_new, **kwargs)
 
-    def show_help(self):
+
+
+    def format_help(self):
         help = self.argparser.format_help()
-        print(help, sys.stderr)
         for cfg in self.added_configs:
-            help = cfg.argparser.format_help()
-            print(help, sys.stderr)
+            help_add = cfg.argparser.format_help()
+            help += "\n\n" + help_add
+        return help
+
+    def show_help(self, file=None, exit=True):
+        if file is None:
+            file = sys.stdout
+        print(self.format_help(), file=file)
+        if exit:
+            sys.exit()
 
     def parse_args(self, args=None):
         """
@@ -228,14 +250,12 @@ class ConfigSimple:
         argstouse = args or sys.argv[1:]
         if self.component == "" and ("-h" in argstouse or "--help" in argstouse):
             self.show_help()
-            sys.exit()
         self.namespace, unknown = self.argparser.parse_known_args(args)
         logger.debug("After parse_args in '{}', unknown: {}".format(self.component, unknown))
         logger.debug("Namespace for {} after parse: {}".format(self.component, vars(self.namespace)))
         # first of all, check if we have a help request:
         if self.get("help"):
             self.show_help()
-            sys.exit()
         for val in unknown:
             if val.startswith("-"):
                 if self.component == "":
@@ -299,7 +319,7 @@ class ConfigSimple:
     def _set(self, name, value):
         if self.namespace is None:
             raise Exception("Can only use set after parse_args has been called")
-        self.namespace.setattr(name, value)
+        setattr(self.namespace, name, value)
 
 
     def set(self, parm, value):
@@ -328,6 +348,9 @@ class ConfigSimple:
     def get_namespace(self):
         return self.namespace
 
+    def get_dict(self):
+        return vars(self.namespace)
+
     # methods to make a config instance behave a lot like a dictionary:
     # just use vars(namespace) and pass on the methods!
     def keys(self):
@@ -349,7 +372,27 @@ class ConfigSimple:
         return vars(self.namespace).__iter__()
 
     def __str__(self):
-        return "ConfigSimple("+str(vars(self.namespace))+")"
+        if self.namespace is not None:
+            return "ConfigSimple("+str(vars(self.namespace))+")"
+        else:
+            return "ConfigSimple()"
 
     def __repr__(self):
         return str(self)
+
+    # methods to help make an instance of this class pickable since the wrapped argparse (and this
+    # configargparse objects are not pickable
+    # Rather than pickle self.argparser, we keep all the info needed to create it in
+    # self._arparser_inits and self._argparser_params and pickle those
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['argparser']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.argparser = configargparse.ArgParser(**self.argparser_inits)
+        for add in self.argparser_adds:
+            self.argparser.add_argument(*add[0], **add[1])
+

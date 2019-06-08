@@ -40,3 +40,22 @@ class TestConfigSimple1C1():
         topconfig.add_argument("--key1", default="defaultforkey1")
         topconfig.parse_args(theargs)
 
+    def test_pickle1(self):
+        config = configsimple.ConfigSimple()
+        config.add_argument('--foo', default=22, help="The foo arg")
+        comp1 = config.get_config(component="comp1")
+        comp1.add_argument("--foo", default=1, help="the comp1 foo arg")
+        comp1.add_argument("--bar", default=1, help="the comp1 bar arg")
+        args = ["--foo", "2222", "--comp1.bar", "33"]
+        config.parse_args(args)
+        comp1.parse_args(args)
+        import pickle
+        asbytes = pickle.dumps(config)
+        newconfig = pickle.loads(asbytes)
+        # with open("test_pickle_help1", "wt") as outf:
+        #     print(config.format_help(), file=outf)
+        # with open("test_pickle_help2", "wt") as outf:
+        #     print(newconfig.format_help(), file=outf)
+        assert config.namespace == newconfig.namespace
+        assert config.format_help() == newconfig.format_help()
+
