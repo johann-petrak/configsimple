@@ -304,10 +304,14 @@ class ConfigSimple:
 
     def set(self, parm, value):
         name = ConfigSimple.fullname(self.component, parm)
-        if self.component == "":
-            
-        if self.parent is not None:
-            self.parent.set(name, value)
+        self._set(name, value)
+        if self.component != "":
+            self.parent._set(name, value)
+        else:
+            # we should be in a top config, see if we can percolate the set down to a child config
+            for cfg in self.added_configs:
+                if parm.startswith(cfg.component):
+                    cfg._set(parm, value)
 
     def merge_namespace(self, ns):
         """
@@ -320,6 +324,9 @@ class ConfigSimple:
             # logger.debug("Merging into {}: {} <= {}".format(self.namespace, k, v))
             setattr(self.namespace, k, v)
         # logger.debug("NS IS NOW: {}".format(self.namespace))
+
+    def get_namespace(self):
+        return self.namespace
 
     # methods to make a config instance behave a lot like a dictionary:
     # just use vars(namespace) and pass on the methods!
