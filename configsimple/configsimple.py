@@ -296,11 +296,16 @@ class ConfigSimple:
             raise Exception("Setting {} not found for component '{}'".format(option, self.component))
         return d.get(name, default)
 
-    def set(self, parm, value):
+    def _set(self, name, value):
         if self.namespace is None:
             raise Exception("Can only use set after parse_args has been called")
-        name = ConfigSimple.fullname(self.component, parm)
         self.namespace.setattr(name, value)
+
+
+    def set(self, parm, value):
+        name = ConfigSimple.fullname(self.component, parm)
+        if self.component == "":
+            
         if self.parent is not None:
             self.parent.set(name, value)
 
