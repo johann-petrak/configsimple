@@ -1,5 +1,5 @@
 from .configsimple import ConfigSimple
-version = '0.3'
+__version__ = '0.3'
 
 def flag(val):
     val = str(val)
