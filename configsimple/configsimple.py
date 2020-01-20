@@ -128,9 +128,8 @@ class ConfigSimple:
         self.known_options = set()
         self.parent = None  # this will be set if this config gets added to another config
 
-    def get_config(self, description=None,
+    def get_config(self, component, description=None,
                  usage=None,
-                 component=None,
                  config_files=None,
                  env_var_prefix="SIMPLECONFIG_"):
         if self.component != "":

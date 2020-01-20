@@ -60,5 +60,5 @@ if __name__ == "__main__":
     #print("Top config now:", topconfig)
     #print("Comp1 config now:", topconfig.get_config(component="comp1"))
     print("After changing, global comp1.sub1.sub2.foo: {}".format(topconfig["comp1.sub1.sub2.foo"]))
-    print("After changing, local comp1 sub1.sub2.foo: {}".format(topconfig.get_config(component="comp1")["sub1.sub2.foo"]))
+    print("After changing, local comp1 sub1.sub2.foo: {}".format(topconfig.get_config("comp1")["sub1.sub2.foo"]))
     print("After changing, instance comp1another sub1.sub2.foo: {}".format(comp1another.config["sub1.sub2.foo"]))
