@@ -3,6 +3,9 @@ from configsimple import topconfig, flag
 # Follow convention that each component adds the arguments in the class body and adds itself to topconfig.
 # Here the config gets added to topconfig when the class is defined, but parsed only when the class is initialized
 # This also illustrates how we can define hierarchical settings in a component
+# NOTE: all instances of a component class will share the settings 
+# In order to initialize different instances of the same class differently, currently the only possible approach
+# is that have a different wrapper class for each instance needed. 
 
 class Component1:
     args = topconfig.get_config(component="comp1")
@@ -34,10 +37,14 @@ if __name__ == "__main__":
     print("Toplevel foo is {}".format(topconfig.get("foo")))
     compclass = [Component1, Component2][topconfig.get("comp")-1]
     comp = compclass()
+    comp1another = Component1()
     print("Get the global comp1.foo: {}".format(topconfig.get("comp1.foo")))
     print("Get the global comp2.foo: {}".format(topconfig.get("comp2.foo")))
     print("Get the global comp1.bar: {}".format(topconfig.get("comp1.bar")))
     print("Get the global comp1.sub1.sub2.foo: {}".format(topconfig["comp1.sub1.sub2.foo"]))
+    print("Get local config comp1 sub1.sub2.foo: {}".format(topconfig.get_config(component="comp1")["sub1.sub2.foo"]))
+    print("Get instance config comp1another sub1.sub2.foo: {}".format(comp1another.config["sub1.sub2.foo"]))
+
     print("Top positional parameter pos1: {}".format(topconfig.get("pos1")))
     #print("All config keys: {}".format(topconfig.keys()))
     #print("All config items: {}".format(topconfig.items()))
@@ -49,3 +56,4 @@ if __name__ == "__main__":
     #print("Comp1 config now:", topconfig.get_config(component="comp1"))
     print("After changing, global comp1.sub1.sub2.foo: {}".format(topconfig["comp1.sub1.sub2.foo"]))
     print("After changing, local comp1 sub1.sub2.foo: {}".format(topconfig.get_config(component="comp1")["sub1.sub2.foo"]))
+    print("After changing, instance comp1another sub1.sub2.foo: {}".format(comp1another.config["sub1.sub2.foo"]))
