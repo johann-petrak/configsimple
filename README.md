@@ -5,7 +5,19 @@
 
 
 
-Configure a command/tall and its components via command line options, config files and environment variables.
+Configure a command and all the different components it uses via command line options, config files and environment variables.
+
+One typical usage scenario: 
+* you have some python program that takes arguments e.g. for which input and  output data to use
+* depending on the input / output data format, the program may use different classes which require different parameters
+* the program may perform different kinds of processing on the data and choose one of several classes for this.
+  Each class again may require different configuration settings
+
+With `configsimple` each of the configurable classes can define their own ConfigSimple object (which works much 
+like ArgumentParser). The main program can then automatically process all the options for the different classes
+and also show help information for them to the user. In addition, all the parameters for any of the components
+can also be defined in a config file.
+
 
 This builds on the [ConfigArgParse](https://github.com/bw2/ConfigArgParse) package, but instead of a replacement 
 for the `ArgumentParser` class, provides its own class `ConfigSimple`
@@ -57,6 +69,7 @@ if __name__ == "__main__":
     print("Toplevel foo is {}".format(topconfig.get("foo")))
     compclass = [Component1, Component2][topconfig.get("comp")-1]
     comp = compclass()
+    print("We are using component class: ", compclass)
     print("Get the global comp1.foo: {}".format(topconfig.get("comp1.foo")))
     print("Get the global comp2.foo: {}".format(topconfig.get("comp2.foo")))
     print("Get the global comp1.bar: {}".format(topconfig.get("comp1.bar")))
