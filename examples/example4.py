@@ -4,8 +4,10 @@ from configsimple import topconfig, flag
 # Here the config gets added to topconfig when the class is defined, but parsed only when the class is initialized
 # This also illustrates how we can define hierarchical settings in a component
 # NOTE: all instances of a component class will share the settings 
-# In order to initialize different instances of the same class differently, currently the only possible approach
-# is that have a different wrapper class for each instance needed. 
+# In order to initialize different instances of the same class differently, these approaches are possible:
+# * if each instance serves a different purpose, have a separate wrapper class for each of those
+# * use code to auto-generate the configs for each instance and generate component names for them, e.g. 
+#   mycomp01 to mycomp09 ... then tell the class which component to use at init time (__init__(self, comp=...))
 
 class Component1:
     args = topconfig.get_config(component="comp1")
@@ -26,6 +28,9 @@ class Component2:
     def __init__(self):
         self.config = Component2.args.parse_args()
         print("Component2 foo is {}".format(self.config.get("foo")))
+
+
+
 
 
 if __name__ == "__main__":
