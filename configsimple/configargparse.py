@@ -10,24 +10,18 @@ import re
 import sys
 import types
 
-if sys.version_info >= (3, 0):
-    from io import StringIO
-else:
-    from StringIO import StringIO
-
-if sys.version_info < (2, 7):
-    from ordereddict import OrderedDict
-else:
-    from collections import OrderedDict
+from io import StringIO
+from collections import OrderedDict
 
 
 ACTION_TYPES_THAT_DONT_NEED_A_VALUE = (argparse._StoreTrueAction,
-    argparse._StoreFalseAction, argparse._CountAction,
-    argparse._StoreConstAction, argparse._AppendConstAction)
+                                       argparse._StoreFalseAction, argparse._CountAction,
+                                       argparse._StoreConstAction, argparse._AppendConstAction)
 
 
 # global ArgumentParser instances
 _parsers = {}
+
 
 def init_argument_parser(name=None, **kwargs):
     """Creates a global ArgumentParser instance with the given name,
@@ -63,10 +57,9 @@ def get_argument_parser(name=None, **kwargs):
     return _parsers[name]
 
 
-class ArgumentDefaultsRawHelpFormatter(
-    argparse.ArgumentDefaultsHelpFormatter,
-    argparse.RawTextHelpFormatter,
-    argparse.RawDescriptionHelpFormatter):
+class ArgumentDefaultsRawHelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
+                                       argparse.RawTextHelpFormatter,
+                                       argparse.RawDescriptionHelpFormatter):
     """HelpFormatter that adds default values AND doesn't do line-wrapping"""
     pass
 

@@ -1,2 +1,2 @@
-ConfigArgParse
-loguru
+# We currently include our own copy of this, so this dependency is not needed
+# ConfigArgParse

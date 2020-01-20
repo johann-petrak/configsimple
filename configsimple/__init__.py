@@ -1,5 +1,7 @@
 from .configsimple import ConfigSimple
+import argparse
 __version__ = '0.3'
+
 
 def flag(val):
     val = str(val)
@@ -9,5 +11,6 @@ def flag(val):
         return False
     else:
         raise argparse.ArgumentTypeError("Boolean value expected, not %s" % (val,))
+
 
 topconfig = ConfigSimple(component='')
