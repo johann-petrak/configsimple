@@ -239,7 +239,7 @@ class ConfigSimple:
         Parse the arguments for this config, if this is a component config, can only be done
         after the config has been added to a top config.
         :param args: a list of argument tokens or None to use argv[1:]
-        :return: None
+        :return: self
         """
         if self.component != "" and self.parent is None:
             raise Exception("Can only use parse_args for a component config ({}) after adding to top config".format(self.component))
@@ -296,6 +296,7 @@ class ConfigSimple:
         # the parent (which will bubble up to its parent and so on)
         if self.parent is not None:
             self.parent.merge_namespace(self.namespace)
+        return self
 
     def get(self, option, default=None, exception_if_missing=False):
         """

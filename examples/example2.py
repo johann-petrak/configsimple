@@ -17,6 +17,7 @@ class Component1:
 
 
 class Component2:
+    @staticmethod
     def configsimple(config=None, component="comp2"):
         myconf = config or topconfig.get_config(component=component)
         myconf.add_argument("--foo", default="xyz", type=str, help="The FOO setting, but a different one!")
@@ -34,8 +35,8 @@ if __name__ == "__main__":
     topconfig.add_argument("--foo", help="The toplevel FOO setting")
     topconfig.add_argument("--comp", type=int, choices=[1, 2], required=True,  help="Component number")
     topconfig.add_argument("pos1")
-    topconfig.add_config(Component1.configsimple())
-    topconfig.add_config(Component2.configsimple())
+    #topconfig.add_config(Component1.configsimple())
+    #topconfig.add_config(Component2.configsimple())
     topconfig.parse_args()
     print("Toplevel foo is {}".format(topconfig.get("foo")))
     compclass = [Component1, Component2][topconfig.get("comp")-1]
