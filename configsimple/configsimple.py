@@ -362,13 +362,16 @@ class ConfigSimple:
 
         :return: component namespace
         """
+        myns = self.get_namespace()
+        if not myns:
+            raise Exception("Method args() can only be used after parsing")
         if self.component:
             newns = argparse.Namespace()
-            for k, v in vars(newns).items():
+            for k, v in vars(self.namespace).items():
                 setattr(newns, k, v)
                 return newns
         else:
-            return self.get_namespace()
+            return myns
 
     def get_dict(self):
         return vars(self.namespace)
