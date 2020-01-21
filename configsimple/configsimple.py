@@ -92,7 +92,7 @@ class ConfigSimple:
             use_env_var_prefix = env_var_prefix
             prog = component
         _, self.argparser_inits = argskws2dicts(
-            prog = prog,
+            prog=prog,
             add_config_file_help=False,
             add_env_var_help=False,
             auto_env_var_prefix=use_env_var_prefix,
@@ -103,6 +103,9 @@ class ConfigSimple:
             add_help=False,
             allow_abbrev=False,
             prefix_chars='-')
+        ## we record everything that gets added to an argparser in this list so we
+        ## can pickle the configsimple and recreate what we need by adding to a new argparser.
+        ## This is necessary since argparser cannot be pickled.
         self.argparser_adds = []
         self.argparser = configargparse.ArgParser(**self.argparser_inits)
         # always add the standard options: component.help, component.config_file
@@ -221,8 +224,6 @@ class ConfigSimple:
         self.argparser_adds.append((options_new, kwargs))
         self.argparser.add_argument(*options_new, **kwargs)
 
-
-
     def format_help(self):
         help = self.argparser.format_help()
         for cfg in self.added_configs:
@@ -325,7 +326,6 @@ class ConfigSimple:
             raise Exception("Can only use set after parse_args has been called")
         setattr(self.namespace, name, value)
 
-
     def set(self, parm, value):
         name = ConfigSimple.fullname(self.component, parm)
         self._set(name, value)
@@ -372,6 +372,14 @@ class ConfigSimple:
                 return newns
         else:
             return myns
+
+    def parms(self):
+        """
+        Return a list of known parameter names
+        :return:
+        """
+        return [p[0][0] for p in self.argparser_adds]
+        # return self.argparser_adds
 
     def get_dict(self):
         return vars(self.namespace)
