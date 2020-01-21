@@ -2,6 +2,7 @@
 # commit c6e81203a06072730a3cbecff367adffda344b52
 # See https://github.com/bw2/ConfigArgParse
 # License: MIT
+# Slightly modified and not bothering to support Python 2 any more
 
 import argparse
 import glob

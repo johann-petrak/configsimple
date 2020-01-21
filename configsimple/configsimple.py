@@ -1,6 +1,7 @@
 from configsimple import configargparse
 import re
 import sys
+import argparse
 from loguru import logger
 
 logger.remove()
@@ -9,8 +10,10 @@ logger.add(sys.stderr, level="INFO")
 PAT_OPTION = re.compile(r'(--?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
 PAT_OPTION_TOP = re.compile(r'(-?-?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
 
+
 def argskws2dicts(*args, **kwargs):
     return args, kwargs
+
 
 class ConfigSimple:
     """
@@ -51,9 +54,10 @@ class ConfigSimple:
         newopt = optionname.upper().replace("-", "_")
         return prefix + newcomp + "_" + newopt
 
-    def __init__(self, description=None,
-                 usage=None,
+    def __init__(self,
                  component=None,
+                 description=None,
+                 usage=None,
                  config_files=None,
                  env_var_prefix="SIMPLECONFIG_"):
         """
@@ -61,10 +65,10 @@ class ConfigSimple:
         component config object which MUST be added to a top config object before it
         can be used. All settings should get accessed from the top object using
         the get() method.
-        :param description: The description of the program or component
-        :param usage: Override the usage information
         :param component: If None or "", a top config object, otherwise a component config
         object which must get added to a top object.
+        :param description: The description of the program or component
+        :param usage: Override the usage information
         :param config_files: the file path name of a config file to also read when parsing
         arguments, or a list of such names.
         :param env_var_prefix: the string to prepend when looking for environment variables
@@ -347,6 +351,24 @@ class ConfigSimple:
 
     def get_namespace(self):
         return self.namespace
+
+    def args(self):
+        """
+        Return a namespace object that contains just the settings for this component config,
+        without the component name prefix. If this config is the topconfig, just returns
+        the whole namespace.
+        This can be used to make access to a component config compatible with the
+        parsed ArgumentParser args.
+
+        :return: component namespace
+        """
+        if self.component:
+            newns = argparse.Namespace()
+            for k, v in vars(newns).items():
+                setattr(newns, k, v)
+                return newns
+        else:
+            return self.get_namespace()
 
     def get_dict(self):
         return vars(self.namespace)
