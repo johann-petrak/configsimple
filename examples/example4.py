@@ -44,6 +44,7 @@ if __name__ == "__main__":
     topconfig.parse_args()
     print("Toplevel parsed args:", topconfig.args())
     print("Toplevel foo is {}".format(topconfig.get("foo")))
+    print("Toplevel args is {}".format(topconfig.args()))
     compclass = [Component1, Component2][topconfig.get("comp")-1]
     comp = compclass()
     comp1another = Component1()

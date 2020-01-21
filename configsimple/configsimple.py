@@ -5,7 +5,7 @@ import argparse
 from loguru import logger
 
 logger.remove()
-logger.add(sys.stderr, level="INFO")
+logger.add(sys.stderr, level="DEBUG")
 
 PAT_OPTION = re.compile(r'(--?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
 PAT_OPTION_TOP = re.compile(r'(-?-?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
@@ -347,7 +347,8 @@ class ConfigSimple:
         for k, v in vars(ns).items():
             # logger.debug("Merging into {}: {} <= {}".format(self.namespace, k, v))
             setattr(self.namespace, k, v)
-        # logger.debug("NS IS NOW: {}".format(self.namespace))
+        # for k, v in vars(ns).items():
+        #     logger.debug("NS: {}={}".format(k, v))
 
     def get_namespace(self):
         return self.namespace
@@ -366,6 +367,8 @@ class ConfigSimple:
         if not myns:
             raise Exception("Method args() can only be used after parsing")
         if self.component:
+            print("DEBUG: component namespace: {}".format(myns))
+            print("DEBUG: parent namespace: {}".format(self.parent.namespace))
             newns = argparse.Namespace()
             for k, v in vars(self.namespace).items():
                 setattr(newns, k, v)
