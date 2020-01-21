@@ -5,7 +5,7 @@ import argparse
 from loguru import logger
 
 logger.remove()
-logger.add(sys.stderr, level="DEBUG")
+logger.add(sys.stderr, level="INFO")
 
 PAT_OPTION = re.compile(r'(--?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
 PAT_OPTION_TOP = re.compile(r'(-?-?)([a-zA-Z0-9][a-zA-Z0-9_.-]*)')
@@ -367,12 +367,14 @@ class ConfigSimple:
         if not myns:
             raise Exception("Method args() can only be used after parsing")
         if self.component:
-            print("DEBUG: component namespace: {}".format(myns))
-            print("DEBUG: parent namespace: {}".format(self.parent.namespace))
             newns = argparse.Namespace()
-            for k, v in vars(self.namespace).items():
+            comp = self.component + "."
+            l = len(comp)
+            for k, v in vars(myns).items():
+                if k.startswith(comp):
+                    k = k[l:]
                 setattr(newns, k, v)
-                return newns
+            return newns
         else:
             return myns
 
